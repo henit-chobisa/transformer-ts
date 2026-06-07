@@ -1,0 +1,23 @@
+{
+  "name": "transformer.ts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "exec": "tsx src/index.ts",
+    "build": "tsc",
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.30.3",
+  "dependencies": {
+    "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "vitest": "^4.1.9"
+  }
+}
