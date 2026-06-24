@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "rootDir": "../transformer.ts/src",
-    "outDir": "../transformer.ts/dist",
+    "rootDir": "../transformer-ts/src",
+    "outDir": "../transformer-ts/dist",
     "module": "esnext",
     "target": "esnext",
     "types": [],
