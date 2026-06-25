@@ -16,10 +16,10 @@ export class Attention {
   wk: Value[][];
   wv: Value[][];
 
-  constructor(dimension: number) {
-    this.wq = initializeRandomMatrix(dimension, dimension);
-    this.wk = initializeRandomMatrix(dimension, dimension);
-    this.wv = initializeRandomMatrix(dimension, dimension);
+  constructor(inputDimension: number, outputDimension: number) {
+    this.wq = initializeRandomMatrix(inputDimension, outputDimension);
+    this.wk = initializeRandomMatrix(inputDimension, outputDimension);
+    this.wv = initializeRandomMatrix(inputDimension, outputDimension);
   }
 
   /*
