@@ -1,35 +1,52 @@
 import type { Value } from "../grad";
+import { matmul } from "../operations";
 import { addMatrix } from "../operations/add";
-import { layernorm } from "../operations/layernorm";
-import { MLP } from "./mlp";
-import { MultiHeadAttention } from "./multi-head-attention";
+import { initializeRandomMatrix } from "../utils";
+import { Embedding } from "./embedding";
+import { PositionalEncoding } from "./encoding";
+import { TransformerBlock } from "./transformer-block";
 
-export class TransformerBlock {
-  attention: MultiHeadAttention;
-  mlp: MLP;
+export class Transformer {
+  embedding: Embedding;
+  positional: PositionalEncoding;
+  blocks: TransformerBlock[];
 
-  constructor(dimension: number, heads: number) {
-    this.attention = new MultiHeadAttention(dimension, heads);
-    this.mlp = new MLP(dimension, [dimension, dimension]);
+  /*
+   * As we are going to need, the final output as the vocabSize x dimension,
+   * which basically is the way to figure out, what is the probability for this
+   * word to come next, that's what we are doing, these are the weights for
+   * that.
+   */
+  finalProjection: Value[][];
+
+  constructor(
+    vocabSize: number,
+    dimension: number,
+    numHeads: number,
+    numBlocks: number,
+    maxSeqLength: number,
+  ) {
+    this.embedding = new Embedding(vocabSize, dimension);
+    this.positional = new PositionalEncoding(maxSeqLength, dimension);
+    this.blocks = Array.from(
+      { length: numBlocks },
+      () => new TransformerBlock(dimension, numHeads),
+    );
+
+    this.finalProjection = initializeRandomMatrix(dimension, vocabSize);
   }
 
-  forward(inputs: Value[][]): Value[][] {
-    // Let's first use attention and make out inputs context aware
-    const attentionResidual = this.attention.forward(inputs);
-    const contextAwareInputs = addMatrix(inputs, attentionResidual);
-    const normalizedInputs = layernorm(contextAwareInputs);
+  forward(tokenIds: number[]): Value[][] {
+    // Getting the input ready, from words to vectors
+    const inputEmbedding = this.embedding.forward(tokenIds);
+    const positionalEncoding = this.positional.forward(tokenIds.length);
+    let embedding = addMatrix(inputEmbedding, positionalEncoding);
 
-    /*
-     * Now our inputs are ready, all good. Now we can run MLP for each row, if
-     * you have the batching picture in the mind, it's working a little
-     * different than that, we are running MLP on each word, that means we are
-     * going to predict each feature of the word as part of the output, not the
-     * actual word as you expect.
-     */
-    const ffOut = normalizedInputs.map((vector) => this.mlp.forward(vector));
-    const alteredOutputFeatures = addMatrix(normalizedInputs, ffOut);
+    // Now for each transformer block we are going to run the forward
+    embedding = this.blocks.reduce((acc, block) => block.forward(acc), embedding);
 
-    // Normalized outputs to consistent scale
-    return layernorm(alteredOutputFeatures);
+    // Calculating logits
+    const logits = matmul(embedding, this.finalProjection);
+    return logits;
   }
 }

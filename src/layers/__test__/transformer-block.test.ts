@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Value } from "../../grad";
-import { TransformerBlock } from "../transformer";
+import { TransformerBlock } from "../transformer-block";
 import { MLP } from "../mlp";
 
 const toValues = (m: number[][]): Value[][] => m.map((row) => row.map((n) => new Value(n)));
@@ -79,7 +79,7 @@ describe("TransformerBlock", () => {
     const out = block.forward(input);
 
     let loss = new Value(0);
-    for (const row of out) for (const v of row) loss = loss.add(v);
+    for (const row of out) for (const v of row) loss = loss.add(v.mul(v));
     loss.backward();
 
     const hasGrad = (m: Value[][]) => m.some((r) => r.some((v) => v.grad !== 0));
