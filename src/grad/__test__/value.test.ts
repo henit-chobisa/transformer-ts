@@ -211,4 +211,65 @@ describe("Value", () => {
       expect(x.grad).toBe(12); // 4x
     });
   });
+
+  describe("Value.sub", () => {
+    it("computes the difference", () => {
+      expect(new Value(10).sub(new Value(3)).value).toBe(7);
+      expect(new Value(2).sub(new Value(5)).value).toBe(-3);
+    });
+
+    it("backprops +1 to the first, -1 to the second", () => {
+      // f = a - b ; df/da = 1, df/db = -1
+      const a = new Value(10);
+      const b = new Value(4);
+      const f = a.sub(b);
+      f.backward();
+      expect(a.grad).toBe(1);
+      expect(b.grad).toBe(-1);
+    });
+
+    it("composes in the graph", () => {
+      // f = (a - b) * c ; df/da = c, df/db = -c
+      const a = new Value(5);
+      const b = new Value(2);
+      const c = new Value(3);
+      const f = a.sub(b).mul(c);
+      f.backward();
+      expect(f.value).toBe(9); // (5-2)*3
+      expect(a.grad).toBe(3); // c
+      expect(b.grad).toBe(-3); // -c
+    });
+  });
+
+  describe("Value.pow", () => {
+    it("computes the power", () => {
+      expect(new Value(2).pow(3).value).toBe(8); // 2^3
+      expect(new Value(9).pow(0.5).value).toBe(3); // sqrt(9)
+    });
+
+    it("backprops the power rule (n * x^(n-1))", () => {
+      // f = x^3 ; df/dx = 3x^2 = 3*(2^2) = 12
+      const x = new Value(2);
+      const f = x.pow(3);
+      f.backward();
+      expect(x.grad).toBe(12);
+    });
+
+    it("sqrt gradient: d/dx[x^0.5] = 0.5 * x^(-0.5)", () => {
+      // x = 4 ; grad = 0.5 * 4^(-0.5) = 0.5 * 0.5 = 0.25
+      const x = new Value(4);
+      const f = x.pow(0.5);
+      f.backward();
+      expect(x.grad).toBeCloseTo(0.25);
+    });
+
+    it("composes in the graph", () => {
+      // f = (x^2) * 3 ; df/dx = 2x * 3 = 6x = 6*5 = 30
+      const x = new Value(5);
+      const f = x.pow(2).mul(new Value(3));
+      f.backward();
+      expect(f.value).toBe(75); // 25 * 3
+      expect(x.grad).toBe(30); // 6x
+    });
+  });
 });

@@ -4,4 +4,6 @@ export enum EOPERATIONTYPE {
   TANH = "tanh",
   EXP = "exp",
   DIV = "div",
+  SUB = "sub",
+  POW = "pow",
 }

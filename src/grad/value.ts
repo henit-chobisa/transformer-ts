@@ -127,6 +127,29 @@ export class Value {
     return result;
   }
 
+  sub(_with: Value): Value {
+    const value = this.value - _with.value;
+    const result = new Value(value, [this, _with], EOPERATIONTYPE.SUB);
+
+    result._backward = () => {
+      this.grad += 1 * result.grad;
+      _with.grad += -1 * result.grad;
+    };
+
+    return result;
+  }
+
+  pow(exponent: number) {
+    const value = Math.pow(this.value, exponent);
+    const result = new Value(value, [this], EOPERATIONTYPE.POW);
+
+    result._backward = () => {
+      this.grad += exponent * Math.pow(this.value, exponent - 1) * result.grad;
+    };
+
+    return result;
+  }
+
   /*
    * See before you read this function, the reason why it looks the way it looks
    * because of one simple fact, say that you defined `const two = new Value(2)`,
