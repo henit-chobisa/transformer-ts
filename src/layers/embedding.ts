@@ -24,4 +24,8 @@ export class Embedding {
 
     return tokenIds.map((tokenId) => this.vocabularyVectors[tokenId]!);
   }
+
+  parameters(): Value[] {
+    return this.vocabularyVectors.flat();
+  }
 }

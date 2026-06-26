@@ -23,4 +23,8 @@ export class PositionalEncoding {
 
     return this.positionTable.slice(0, seqLength);
   }
+
+  parameters(): Value[] {
+    return this.positionTable.flat();
+  }
 }

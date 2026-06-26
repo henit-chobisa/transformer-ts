@@ -46,6 +46,10 @@ export class Attention {
     return matmul(contextWeights, V);
   }
 
+  parameters(): Value[] {
+    return [...this.wk.flat(), ...this.wq.flat(), ...this.wv.flat()];
+  }
+
   generateQKV(embedding: Value[][]): TQKVContainer {
     const Q = matmul(embedding, this.wq);
     const K = matmul(embedding, this.wk);

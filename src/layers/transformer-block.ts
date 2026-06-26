@@ -32,4 +32,8 @@ export class TransformerBlock {
     // Normalized outputs to consistent scale
     return layernorm(alteredOutputFeatures);
   }
+
+  parameters(): Value[] {
+    return [...this.attention.parameters(), ...this.mlp.parameters()];
+  }
 }

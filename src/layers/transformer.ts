@@ -49,4 +49,13 @@ export class Transformer {
     const logits = matmul(embedding, this.finalProjection);
     return logits;
   }
+
+  parameters(): Value[] {
+    return [
+      ...this.embedding.parameters(),
+      ...this.positional.parameters(),
+      ...this.blocks.flatMap((block) => block.parameters()),
+      ...this.finalProjection.flat(),
+    ];
+  }
 }

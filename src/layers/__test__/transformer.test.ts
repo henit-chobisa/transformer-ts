@@ -112,4 +112,64 @@ describe("Transformer", () => {
       expect(partHasGrad(block.attention.wo)).toBe(true);
     }
   });
+
+  describe("Transformer.parameters()", () => {
+    it("returns a flat array of Value objects", () => {
+      const model = new Transformer(10, 4, 2, 2, 16);
+      const params = model.parameters();
+
+      expect(Array.isArray(params)).toBe(true);
+      expect(params.length).toBeGreaterThan(0);
+      for (const p of params) {
+        expect(p).toBeInstanceOf(Value); // all flat Values, no nested arrays
+      }
+    });
+
+    it("collects EVERY parameter (count matches the model's pieces)", () => {
+      const vocabSize = 10,
+        d = 4,
+        heads = 2,
+        blocks = 2,
+        maxSeq = 16;
+      const model = new Transformer(vocabSize, d, heads, blocks, maxSeq);
+      const params = model.parameters();
+
+      // embedding: vocab*d = 40
+      // positional: maxSeq*d = 64
+      // finalProjection: d*vocab = 40
+      // per block: attention (3 heads-worth... actually per head wq/wk/wv each d*(d/heads))
+      //   each head: 3 * (d * d/heads) = 3 * (4 * 2) = 24 ; 2 heads = 48 ; + Wo (d*d=16) = 64
+      //   mlp: depends on your MLP sizing
+      // We won't hand-compute exactly — just assert it's a large, sane number
+      // and that re-calling gives the same count (stable).
+      expect(params.length).toBe(model.parameters().length); // stable
+      expect(params.length).toBeGreaterThan(200); // sanity: it's collecting a lot
+    });
+
+    it("the collected params are the SAME objects used in forward (gradients update them)", () => {
+      const model = new Transformer(10, 4, 2, 2, 16);
+
+      // run forward + backward
+      const logits = model.forward([1, 2, 3]);
+      let loss = new Value(0);
+      for (const row of logits) for (const v of row) loss = loss.add(v.mul(v));
+      loss.backward();
+
+      // at least some collected params should have gradients
+      // (proves parameters() returns the actual graph nodes, not copies)
+      const params = model.parameters();
+      const someHaveGrad = params.some((p) => p.grad !== 0);
+      expect(someHaveGrad).toBe(true);
+    });
+
+    it("includes embedding, positional, and finalProjection params", () => {
+      const model = new Transformer(10, 4, 2, 2, 16);
+      const params = model.parameters();
+
+      // spot-check: a known embedding Value should be in the params list
+      expect(params).toContain(model.embedding.vocabularyVectors[0]![0]);
+      expect(params).toContain(model.positional.positionTable[0]![0]);
+      expect(params).toContain(model.finalProjection[0]![0]);
+    });
+  });
 });

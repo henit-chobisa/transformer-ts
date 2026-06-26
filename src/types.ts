@@ -6,4 +6,5 @@ export enum EOPERATIONTYPE {
   DIV = "div",
   SUB = "sub",
   POW = "pow",
+  log = "log",
 }

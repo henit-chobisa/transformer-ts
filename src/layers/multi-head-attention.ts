@@ -31,4 +31,8 @@ export class MultiHeadAttention {
     const normalizedInputs = matmul(concatanatedContextAwareInputs, this.wo);
     return normalizedInputs;
   }
+
+  parameters(): Value[] {
+    return [...this.heads.flatMap((head) => head.parameters()), ...this.wo.flat()];
+  }
 }

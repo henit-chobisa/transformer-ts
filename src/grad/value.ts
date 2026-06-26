@@ -150,6 +150,17 @@ export class Value {
     return result;
   }
 
+  log(): Value {
+    const value = Math.log(this.value);
+    const result = new Value(value, [this], EOPERATIONTYPE.log);
+
+    result._backward = () => {
+      this.grad += (1 / this.value) * result.grad;
+    };
+
+    return result;
+  }
+
   /*
    * See before you read this function, the reason why it looks the way it looks
    * because of one simple fact, say that you defined `const two = new Value(2)`,

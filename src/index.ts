@@ -1,2 +1,4 @@
 export * from "./grad";
-export * from "./network";
+export * from "./layers";
+export * from "./types";
+export * from "./operations";

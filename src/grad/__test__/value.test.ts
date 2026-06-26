@@ -272,4 +272,38 @@ describe("Value", () => {
       expect(x.grad).toBe(30); // 6x
     });
   });
+
+  describe("Value.log", () => {
+    it("computes natural log", () => {
+      expect(new Value(1).log().value).toBe(0); // ln(1) = 0
+      expect(new Value(Math.E).log().value).toBeCloseTo(1); // ln(e) = 1
+    });
+
+    it("computes log of other values", () => {
+      expect(new Value(10).log().value).toBeCloseTo(Math.log(10));
+    });
+
+    it("backprops gradient of 1/x", () => {
+      // d/dx ln(x) = 1/x ; at x=4, grad = 0.25
+      const x = new Value(4);
+      const out = x.log();
+      out.backward();
+      expect(x.grad).toBeCloseTo(0.25);
+    });
+
+    it("composes in the graph", () => {
+      // f = ln(x) * 3 ; df/dx = 3/x = 3/2 = 1.5
+      const x = new Value(2);
+      const f = x.log().mul(new Value(3));
+      f.backward();
+      expect(x.grad).toBeCloseTo(1.5); // 3/x
+    });
+
+    it("inverse relationship with exp (sanity)", () => {
+      // ln(e^x) should ≈ x
+      const x = new Value(2);
+      const out = x.exp().log();
+      expect(out.value).toBeCloseTo(2);
+    });
+  });
 });
